@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gear System Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .gear-visualization {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .gears-container {
+            position: relative;
+            width: 400px;
+            height: 250px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gear {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+            transition: transform 0.1s linear;
+            z-index: 2;
+        }
+
+        .gear-body {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+        }
+
+        .input-gear {
+            left: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .input-gear .gear-body {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: 3px solid #1e40af;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .output-gear {
+            right: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .output-gear .gear-body {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: 3px solid #b91c1c;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .gear-teeth-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .tooth {
+            position: absolute;
+            background: inherit;
+            border: inherit;
+            box-shadow: inherit;
+            transform-origin: center;
+        }
+
+        .input-gear .tooth {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: 1px solid #1e40af;
+        }
+
+        .output-gear .tooth {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: 1px solid #b91c1c;
+        }
+
+        .connection-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #ef4444);
+            z-index: 1;
+            opacity: 0.6;
+        }
+
+        .controls-panel {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .control-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .control-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .run-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 25px;
+        }
+
+        .run-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .run-button:active {
+            transform: translateY(0);
+        }
+
+        .results-panel {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .results-panel h3 {
+            color: #374151;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .result-value {
+            font-weight: 700;
+            color: #111827;
+            font-size: 1.1rem;
+        }
+
+        .speed-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .speed-light {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #d1d5db;
+            transition: all 0.3s ease;
+        }
+
+        .speed-light.faster {
+            background: #10b981;
+            border-color: #059669;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .speed-light.slower {
+            background: #ef4444;
+            border-color: #dc2626;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .speed-light.same {
+            background: #f59e0b;
+            border-color: #d97706;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        .activity-section {
+            grid-column: 1 / -1;
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e2e8f0;
+            margin-top: 20px;
+        }
+
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .tab-btn.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-btn:hover {
+            color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .activity-section h2 {
+            color: #374151;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .data-table th {
+            background: #374151;
+            color: white;
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .editable-cell {
+            background: #f0f9ff;
+            cursor: text;
+        }
+
+        .editable-cell:focus {
+            background: #dbeafe;
+            outline: 2px solid #3b82f6;
+        }
+
+        .calculated-cell {
+            background: #f9fafb;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            align-items: center;
+        }
+
+        .calculate-btn, .clear-btn, .graph-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .graph-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .calculate-btn:hover, .clear-btn:hover, .graph-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .graph-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+            border: 2px solid #e2e8f0;
+            display: none;
+        }
+
+        .graph-canvas {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+        }
+
+        .cer-container {
+            display: grid;
+            gap: 30px;
+        }
+
+        .cer-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .cer-section h3 {
+            color: #374151;
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cer-instruction {
+            color: #6b7280;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .cer-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .cer-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .cer-questions {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .cer-questions h3 {
+            color: #374151;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .question-item {
+            margin-bottom: 25px;
+        }
+
+        .question-item label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .question-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .question-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .cer-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .save-btn, .print-btn, .clear-cer-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .print-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+
+        .clear-cer-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .save-btn:hover, .print-btn:hover, .clear-cer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .gears-container {
+                width: 250px;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Gear System Simulator</h1>
+            <p>Explore the fascinating world of gear ratios and mechanical advantage!</p>
+        </div>
+
+        <div class="main-content">
+            <div class="gear-visualization">
+                <h3>Gear Visualization</h3>
+                <div class="gears-container">
+                    <div class="connection-line" id="connectionLine"></div>
+                    <div class="gear input-gear" id="inputGear">
+                        <div class="gear-teeth-container" id="inputTeethContainer"></div>
+                        <div class="gear-body">
+                            <span>INPUT</span>
+                        </div>
+                    </div>
+                    <div class="gear output-gear" id="outputGear">
+                        <div class="gear-teeth-container" id="outputTeethContainer"></div>
+                        <div class="gear-body">
+                            <span>OUTPUT</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="speed-indicator">
+                    <div class="speed-light" id="speedLight"></div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label for="inputTeeth">Input Gear # of Teeth:</label>
+                    <input type="number" id="inputTeethInput" class="control-input" value="20" min="5" max="100">
+                </div>
+
+                <div class="control-group">
+                    <label for="outputTeeth">Output Gear # of Teeth:</label>
+                    <input type="number" id="outputTeethInput" class="control-input" value="10" min="5" max="100">
+                </div>
+
+                <div class="control-group">
+                    <label for="inputSpeed">Input Gear Speed (RPM):</label>
+                    <input type="number" id="inputSpeedInput" class="control-input" value="60" min="1" max="1000" step="1">
+                </div>
+
+                <button class="run-button" id="runButton">🚀 Run Simulation</button>
+
+                <div class="results-panel">
+                    <h3>📊 Results</h3>
+                    <div class="result-item">
+                        <span class="result-label">Input Gear Teeth:</span>
+                        <span class="result-value" id="resultInputTeeth">20</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Output Gear Teeth:</span>
+                        <span class="result-value" id="resultOutputTeeth">10</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Input Speed (RPM):</span>
+                        <span class="result-value" id="resultInputSpeed">60</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Output Speed (RPM):</span>
+                        <span class="result-value" id="resultOutputSpeed">120.0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Gear Ratio:</span>
+                        <span class="result-value" id="resultGearRatio">0.50</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Output Speed:</span>
+                        <span class="result-value" id="resultSpeed">Faster</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="activity-section">
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="experiment">🎯 Experiment</button>
+                <button class="tab-btn" data-tab="cer">📝 CER Analysis</button>
+            </div>
+            
+            <div class="tab-content active" id="experiment-tab">
+                <h2>🎯 The Great Gear Experiment</h2>
+                <p style="margin-bottom: 20px; color: #6b7280; font-size: 1.1rem;">
+                    <strong>Objective:</strong> Understand the relationship between gear teeth, speed, and resulting gear ratios.
+                </p>
+                
+                <div class="table-controls">
+                    <button class="calculate-btn" id="calculateBtn">📊 Calculate Results</button>
+                    <button class="clear-btn" id="clearBtn">🗑️ Clear Table</button>
+                    <button class="graph-btn" id="graphBtn">📈 Show Graph</button>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Input Gear Teeth</th>
+                            <th>Output Gear Teeth</th>
+                            <th>Input Speed (RPM)</th>
+                            <th>Output Speed (RPM)</th>
+                            <th>Gear Ratio</th>
+                            <th>Speed Comparison</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                        </tr>
+                        <tr>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td contenteditable="true" class="editable-cell"></td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                            <td class="calculated-cell">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="graph-container" id="graphContainer">
+                    <h3>📈 Gear Ratio vs Output Speed Graph</h3>
+                    <canvas class="graph-canvas" id="graphCanvas"></canvas>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="cer-tab">
+                <h2>📝 CER Analysis: Gear Systems</h2>
+                <p style="margin-bottom: 30px; color: #6b7280; font-size: 1.1rem;">
+                    Use your experimental data to complete this Claim, Evidence, and Reasoning analysis.
+                </p>
+                
+                <div class="cer-container">
+                    <div class="cer-section">
+                        <h3>🎯 Claim</h3>
+                        <p class="cer-instruction">Make a statement about how gear size affects output speed. What is the relationship?</p>
+                        <textarea class="cer-textarea" placeholder="Write your claim here... (Example: When the input gear has more teeth than the output gear, the output speed increases.)"></textarea>
+                    </div>
+                    
+                    <div class="cer-section">
+                        <h3>📊 Evidence</h3>
+                        <p class="cer-instruction">Use specific data from your experiment table to support your claim.</p>
+                        <textarea class="cer-textarea" placeholder="Provide specific evidence from your data... (Example: In trial 1, with 20 input teeth and 10 output teeth, the output speed was 120 RPM compared to 60 RPM input speed.)"></textarea>
+                    </div>
+                    
+                    <div class="cer-section">
+                        <h3>🧠 Reasoning</h3>
+                        <p class="cer-instruction">Explain WHY your evidence supports your claim using scientific principles.</p>
+                        <textarea class="cer-textarea" placeholder="Explain the scientific reasoning... (Example: This happens because when a larger gear drives a smaller gear, the smaller gear must complete more rotations to match the distance traveled by the larger gear's teeth.)"></textarea>
+                    </div>
+                    
+                    <div class="cer-questions">
+                        <h3>🤔 Reflection Questions</h3>
+                        
+                        <div class="question-item">
+                            <label>1. What happens to the output speed when you increase the number of teeth on the input gear?</label>
+                            <textarea class="question-textarea" placeholder="Your answer..."></textarea>
+                        </div>
+                        
+                        <div class="question-item">
+                            <label>2. If you wanted to create a gear system that makes something spin very fast, how would you design it?</label>
+                            <textarea class="question-textarea" placeholder="Your answer..."></textarea>
+                        </div>
+                        
+                        <div class="question-item">
+                            <label>3. Give a real-world example where you might want gears to increase speed vs. decrease speed.</label>
+                            <textarea class="question-textarea" placeholder="Your answer..."></textarea>
+                        </div>
+                        
+                        <div class="question-item">
+                            <label>4. What pattern do you notice in your gear ratio calculations? How does this relate to the speed changes?</label>
+                            <textarea class="question-textarea" placeholder="Your answer..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="cer-actions">
+                        <button class="save-btn" id="saveBtn">💾 Save Responses</button>
+                        <button class="print-btn" id="printBtn">🖨️ Print CER</button>
+                        <button class="clear-cer-btn" id="clearCerBtn">🗑️ Clear All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class GearSimulator {
+            constructor() {
+                this.inputGear = document.getElementById('inputGear');
+                this.outputGear = document.getElementById('outputGear');
+                this.inputTeethInput = document.getElementById('inputTeethInput');
+                this.outputTeethInput = document.getElementById('outputTeethInput');
+                this.inputSpeedInput = document.getElementById('inputSpeedInput');
+                this.runButton = document.getElementById('runButton');
+                this.speedLight = document.getElementById('speedLight');
+                
+                this.isRunning = false;
+                this.animationId = null;
+                this.inputAngle = 0;
+                this.outputAngle = 0;
+                
+                // Table elements
+                this.calculateBtn = document.getElementById('calculateBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.graphBtn = document.getElementById('graphBtn');
+                this.graphContainer = document.getElementById('graphContainer');
+                this.graphCanvas = document.getElementById('graphCanvas');
+                
+                // Tab elements
+                this.tabBtns = document.querySelectorAll('.tab-btn');
+                this.tabContents = document.querySelectorAll('.tab-content');
+                
+                // CER elements
+                this.saveBtn = document.getElementById('saveBtn');
+                this.printBtn = document.getElementById('printBtn');
+                this.clearCerBtn = document.getElementById('clearCerBtn');
+                
+                this.initializeEventListeners();
+                this.updateCalculations();
+                this.updateGearSizes();
+            }
+
+            initializeEventListeners() {
+                this.inputTeethInput.addEventListener('input', () => {
+                    this.updateCalculations();
+                    this.updateGearSizes();
+                });
+                
+                this.outputTeethInput.addEventListener('input', () => {
+                    this.updateCalculations();
+                    this.updateGearSizes();
+                });
+                
+                this.inputSpeedInput.addEventListener('input', () => {
+                    this.updateCalculations();
+                });
+                
+                this.runButton.addEventListener('click', () => {
+                    this.toggleSimulation();
+                });
+                
+                // Table controls
+                this.calculateBtn.addEventListener('click', () => {
+                    this.calculateTableResults();
+                });
+                
+                this.clearBtn.addEventListener('click', () => {
+                    this.clearTable();
+                });
+                
+                this.graphBtn.addEventListener('click', () => {
+                    this.toggleGraph();
+                });
+                
+                // Tab navigation
+                this.tabBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.switchTab(btn.dataset.tab);
+                    });
+                });
+                
+                // CER controls
+                this.saveBtn.addEventListener('click', () => {
+                    this.saveCerResponses();
+                });
+                
+                this.printBtn.addEventListener('click', () => {
+                    this.printCer();
+                });
+                
+                this.clearCerBtn.addEventListener('click', () => {
+                    this.clearCerResponses();
+                });
+            }
+
+            switchTab(tabName) {
+                // Remove active class from all tabs and contents
+                this.tabBtns.forEach(btn => btn.classList.remove('active'));
+                this.tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to selected tab and content
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            }
+
+            updateCalculations() {
+                const inputTeeth = parseInt(this.inputTeethInput.value) || 20;
+                const outputTeeth = parseInt(this.outputTeethInput.value) || 10;
+                const inputSpeed = parseFloat(this.inputSpeedInput.value) || 60;
+                
+                // Calculate gear ratio (input/output for mechanical advantage)
+                const gearRatio = inputTeeth / outputTeeth;
+                
+                // Calculate output speed
+                const outputSpeed = inputSpeed * gearRatio;
+                
+                // Determine speed comparison
+                let speedComparison;
+                if (gearRatio > 1.05) {
+                    speedComparison = "Faster";
+                } else if (gearRatio < 0.95) {
+                    speedComparison = "Slower";
+                } else {
+                    speedComparison = "Same";
+                }
+                
+                // Update results display
+                document.getElementById('resultInputTeeth').textContent = inputTeeth;
+                document.getElementById('resultOutputTeeth').textContent = outputTeeth;
+                document.getElementById('resultInputSpeed').textContent = inputSpeed;
+                document.getElementById('resultOutputSpeed').textContent = outputSpeed.toFixed(1);
+                document.getElementById('resultGearRatio').textContent = gearRatio.toFixed(2);
+                document.getElementById('resultSpeed').textContent = speedComparison;
+                
+                // Update speed indicator
+                this.updateSpeedIndicator(speedComparison);
+            }
+
+            updateSpeedIndicator(speedComparison) {
+                this.speedLight.className = 'speed-light';
+                
+                switch(speedComparison) {
+                    case 'Faster':
+                        this.speedLight.classList.add('faster');
+                        break;
+                    case 'Slower':
+                        this.speedLight.classList.add('slower');
+                        break;
+                    case 'Same':
+                        this.speedLight.classList.add('same');
+                        break;
+                }
+            }
+
+            updateGearSizes() {
+                const inputTeeth = parseInt(this.inputTeethInput.value) || 20;
+                const outputTeeth = parseInt(this.outputTeethInput.value) || 10;
+                
+                // Calculate gear sizes based on teeth count
+                const teethScale = 3; // pixels per tooth
+                const minSize = 50;
+                const maxSize = 150;
+                
+                let inputSize = Math.max(minSize, Math.min(maxSize, inputTeeth * teethScale));
+                let outputSize = Math.max(minSize, Math.min(maxSize, outputTeeth * teethScale));
+                
+                // Ensure gears can mesh properly - adjust positions if needed
+                const totalWidth = inputSize/2 + outputSize/2;
+                const containerWidth = 300; // Available space between gears
+                
+                if (totalWidth > containerWidth) {
+                    const scale = containerWidth / totalWidth * 0.9;
+                    inputSize *= scale;
+                    outputSize *= scale;
+                }
+                
+                // Set gear sizes
+                this.inputGear.style.width = inputSize + 'px';
+                this.inputGear.style.height = inputSize + 'px';
+                this.outputGear.style.width = outputSize + 'px';
+                this.outputGear.style.height = outputSize + 'px';
+                
+                // Position gears so they touch
+                const gearDistance = (inputSize + outputSize) / 2 - 8; // Slight overlap for meshing
+                this.inputGear.style.left = `calc(50% - ${gearDistance/2 + inputSize/2}px)`;
+                this.outputGear.style.right = `calc(50% - ${gearDistance/2 + outputSize/2}px)`;
+                
+                // Update connection line
+                const connectionLine = document.getElementById('connectionLine');
+                connectionLine.style.width = gearDistance + 'px';
+                
+                // Create realistic gear teeth
+                this.createGearTeeth('inputTeethContainer', inputTeeth, inputSize, 'input');
+                this.createGearTeeth('outputTeethContainer', outputTeeth, outputSize, 'output');
+            }
+
+            createGearTeeth(containerId, teethCount, gearSize, gearType) {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                
+                const radius = gearSize / 2;
+                const toothHeight = Math.max(8, Math.min(15, gearSize * 0.15));
+                const toothWidth = Math.max(4, Math.min(12, (2 * Math.PI * radius) / teethCount * 0.6));
+                
+                for (let i = 0; i < teethCount; i++) {
+                    const tooth = document.createElement('div');
+                    tooth.className = 'tooth';
+                    
+                    const angle = (360 / teethCount) * i;
+                    const angleRad = (angle * Math.PI) / 180;
+                    
+                    // Position tooth on the circumference
+                    const x = Math.cos(angleRad) * (radius + toothHeight/2);
+                    const y = Math.sin(angleRad) * (radius + toothHeight/2);
+                    
+                    tooth.style.width = toothWidth + 'px';
+                    tooth.style.height = toothHeight + 'px';
+                    tooth.style.left = `calc(50% + ${x - toothWidth/2}px)`;
+                    tooth.style.top = `calc(50% + ${y - toothHeight/2}px)`;
+                    tooth.style.transform = `rotate(${angle + 90}deg)`;
+                    tooth.style.borderRadius = '2px';
+                    
+                    container.appendChild(tooth);
+                }
+                
+                // Create inner gear body
+                const gearBody = container.parentElement.querySelector('.gear-body');
+                gearBody.style.width = (gearSize - toothHeight) + 'px';
+                gearBody.style.height = (gearSize - toothHeight) + 'px';
+            }
+
+            toggleSimulation() {
+                if (this.isRunning) {
+                    this.stopSimulation();
+                } else {
+                    this.startSimulation();
+                }
+            }
+
+            startSimulation() {
+                this.isRunning = true;
+                this.runButton.textContent = '⏹️ Stop Simulation';
+                this.runButton.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                
+                const inputTeeth = parseInt(this.inputTeethInput.value) || 20;
+                const outputTeeth = parseInt(this.outputTeethInput.value) || 10;
+                const gearRatio = inputTeeth / outputTeeth;
+                
+                // Calculate proper meshing - teeth must align
+                const inputTeethAngle = 360 / inputTeeth;
+                const outputTeethAngle = 360 / outputTeeth;
+                
+                const animate = () => {
+                    if (!this.isRunning) return;
+                    
+                    this.inputAngle += 1; // Input gear rotation speed
+                    this.outputAngle -= gearRatio; // Output gear rotates in opposite direction
+                    
+                    // Apply rotation to entire gear assembly
+                    this.inputGear.style.transform = `translateY(-50%) rotate(${this.inputAngle}deg)`;
+                    this.outputGear.style.transform = `translateY(-50%) rotate(${this.outputAngle}deg)`;
+                    
+                    this.animationId = requestAnimationFrame(animate);
+                };
+                
+                animate();
+            }
+
+            stopSimulation() {
+                this.isRunning = false;
+                this.runButton.textContent = '🚀 Run Simulation';
+                this.runButton.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+            }
+
+            calculateTableResults() {
+                const rows = document.querySelectorAll('.data-table tbody tr');
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const inputTeeth = parseFloat(cells[0].textContent) || 0;
+                    const outputTeeth = parseFloat(cells[1].textContent) || 0;
+                    const inputSpeed = parseFloat(cells[2].textContent) || 0;
+                    
+                    if (inputTeeth > 0 && outputTeeth > 0 && inputSpeed > 0) {
+                        const gearRatio = inputTeeth / outputTeeth;
+                        const outputSpeed = inputSpeed * gearRatio;
+                        
+                        let speedComparison;
+                        if (gearRatio > 1.05) {
+                            speedComparison = "Faster";
+                        } else if (gearRatio < 0.95) {
+                            speedComparison = "Slower";
+                        } else {
+                            speedComparison = "Same";
+                        }
+                        
+                        cells[3].textContent = outputSpeed.toFixed(1);
+                        cells[4].textContent = gearRatio.toFixed(2);
+                        cells[5].textContent = speedComparison;
+                    }
+                });
+            }
+
+            clearTable() {
+                const calculatedCells = document.querySelectorAll('.calculated-cell');
+                calculatedCells.forEach(cell => {
+                    cell.textContent = '-';
+                });
+                
+                const editableCells = document.querySelectorAll('.editable-cell');
+                editableCells.forEach(cell => {
+                    cell.textContent = '';
+                });
+            }
+
+            toggleGraph() {
+                if (this.graphContainer.style.display === 'none' || !this.graphContainer.style.display) {
+                    this.graphContainer.style.display = 'block';
+                    this.graphBtn.textContent = '📉 Hide Graph';
+                    this.drawGraph();
+                } else {
+                    this.graphContainer.style.display = 'none';
+                    this.graphBtn.textContent = '📈 Show Graph';
+                }
+            }
+
+            drawGraph() {
+                const canvas = this.graphCanvas;
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Get data from table
+                const rows = document.querySelectorAll('.data-table tbody tr');
+                const dataPoints = [];
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const gearRatio = parseFloat(cells[4].textContent);
+                    const outputSpeed = parseFloat(cells[3].textContent);
+                    
+                    if (!isNaN(gearRatio) && !isNaN(outputSpeed)) {
+                        dataPoints.push({ x: gearRatio, y: outputSpeed });
+                    }
+                });
+                
+                if (dataPoints.length === 0) return;
+                
+                // Set up graph dimensions
+                const padding = 60;
+                const graphWidth = canvas.width - 2 * padding;
+                const graphHeight = canvas.height - 2 * padding;
+                
+                // Find min/max values
+                const minX = Math.min(...dataPoints.map(p => p.x)) * 0.9;
+                const maxX = Math.max(...dataPoints.map(p => p.x)) * 1.1;
+                const minY = Math.min(...dataPoints.map(p => p.y)) * 0.9;
+                const maxY = Math.max(...dataPoints.map(p => p.y)) * 1.1;
+                
+                // Draw axes
+                ctx.strokeStyle = '#374151';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, canvas.height - padding);
+                ctx.lineTo(canvas.width - padding, canvas.height - padding);
+                ctx.stroke();
+                
+                // Draw grid lines
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.lineWidth = 1;
+                for (let i = 1; i < 5; i++) {
+                    const x = padding + (graphWidth * i / 5);
+                    const y = padding + (graphHeight * i / 5);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, padding);
+                    ctx.lineTo(x, canvas.height - padding);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(padding, y);
+                    ctx.lineTo(canvas.width - padding, y);
+                    ctx.stroke();
+                }
+                
+                // Draw data points
+                ctx.fillStyle = '#3b82f6';
+                dataPoints.forEach(point => {
+                    const x = padding + ((point.x - minX) / (maxX - minX)) * graphWidth;
+                    const y = canvas.height - padding - ((point.y - minY) / (maxY - minY)) * graphHeight;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+                
+                // Draw connecting line
+                if (dataPoints.length > 1) {
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    
+                    dataPoints.sort((a, b) => a.x - b.x);
+                    dataPoints.forEach((point, index) => {
+                        const x = padding + ((point.x - minX) / (maxX - minX)) * graphWidth;
+                        const y = canvas.height - padding - ((point.y - minY) / (maxY - minY)) * graphHeight;
+                        
+                        if (index === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    });
+                    ctx.stroke();
+                }
+                
+                // Add labels
+                ctx.fillStyle = '#374151';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Gear Ratio', canvas.width / 2, canvas.height - 20);
+                
+                ctx.save();
+                ctx.translate(20, canvas.height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText('Output Speed (RPM)', 0, 0);
+                ctx.restore();
+            }
+
+            saveCerResponses() {
+                const responses = {};
+                const textareas = document.querySelectorAll('#cer-tab textarea');
+                
+                textareas.forEach((textarea, index) => {
+                    responses[`response_${index}`] = textarea.value;
+                });
+                
+                localStorage.setItem('cerResponses', JSON.stringify(responses));
+                
+                // Show confirmation
+                this.saveBtn.textContent = '✅ Saved!';
+                setTimeout(() => {
+                    this.saveBtn.textContent = '💾 Save Responses';
+                }, 2000);
+            }
+
+            printCer() {
+                const cerContent = document.getElementById('cer-tab').innerHTML;
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>CER Analysis - Gear Systems</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 20px; }
+                                .cer-section { margin-bottom: 30px; }
+                                h3 { color: #374151; margin-bottom: 10px; }
+                                .cer-instruction { color: #6b7280; font-style: italic; margin-bottom: 15px; }
+                                textarea { width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ccc; }
+                                .question-item { margin-bottom: 20px; }
+                                label { font-weight: bold; display: block; margin-bottom: 5px; }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>CER Analysis: Gear Systems</h1>
+                            ${cerContent}
+                        </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.print();
+            }
+
+            clearCerResponses() {
+                const textareas = document.querySelectorAll('#cer-tab textarea');
+                textareas.forEach(textarea => {
+                    textarea.value = '';
+                });
+                
+                localStorage.removeItem('cerResponses');
+                
+                // Show confirmation
+                this.clearCerBtn.textContent = '✅ Cleared!';
+                setTimeout(() => {
+                    this.clearCerBtn.textContent = '🗑️ Clear All';
+                }, 2000);
+            }
+        }
+
+        // Initialize the simulator when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new GearSimulator();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c163a7cd1f93d73',t:'MTc2ODk5MjM5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
